@@ -1,40 +1,57 @@
 <template>
   <div class="keyboard" v-show="showKeyboard" v-clickoutside="closeModal">
-    <p v-for="keys in keyList">
-      <template v-for="key in keys">
+    <p v-for="(keys ,index) in keyList" :key="index">
+      <template v-for="(key,index) in keys" >
         <i
+        :key="index"
           v-if="key === 'top'"
           @click.stop="clickKey"
           @touchend.stop="clickKey"
           class="iconfont icon-zhiding tab-top"
         ></i>
         <i
+        :key="index"
           v-else-if="key === '123'"
           @click.stop="clickKey"
           @touchend.stop="clickKey"
           class="tab-num"
         >123</i>
         <i
+        :key="index"
           v-else-if="key === 'del'"
           @click.stop="clickKey"
           @touchend.stop="clickKey"
           class="iconfont icon-delete key-delete"
         ></i>
         <i
+        :key="index"
+          v-else-if="key === '*+='"
+          @click.stop="clickKey"
+          @touchend.stop="clickKey"
+          class="symbol"
+        >*+=</i>
+           <i
+        :key="index"
+          v-else-if="key === 'abc'"
+          @click.stop="clickKey"
+          @touchend.stop="clickKey"
+          class="piny"
+        >abc</i>
+        <i
+        :key="index"
           v-else-if="key === 'blank'"
           @click.stop="clickKey"
           @touchend.stop="clickKey"
           class="tabBlank"
         >空格</i>
-        <!-- <i v-else-if="key === 'symbol'" @click.stop="clickKey" @touchend.stop="clickKey" class="tab-symbol">符</i> -->
-        <!-- <i v-else-if="key === 'point'" @click.stop="clickKey" @touchend.stop="clickKey" class="tab-point">·</i> -->
         <i
+        :key="index"
           v-else-if="key === 'enter'"
           @click.stop="clickKey"
           @touchend.stop="clickKey"
           class="tabEnter"
         >确定</i>
-        <i v-else @click.stop="clickKey" @touchend.stop="clickKey">{{key}}</i>
+        <i :key="index" v-else @click.stop="clickKey" @touchend.stop="clickKey">{{key}}</i>
       </template>
     </p>
   </div>
@@ -48,20 +65,31 @@ export default {
   data() {
     return {
       keyList: [],
-      status: 0, //0 小写 1 大写 2 数字 3 符号
+      status: 0, //0 小写； 1 大写 ；2 数字 ；3 符号
+      changeStatus:0,
       ungetFunction: ['point', 'symbol'],
+       //小写
       lowercase: [
         ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
         ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
         ['top', 'z', 'x', 'c', 'v', 'b', 'n', 'm', 'del'],
         ['123', 'blank', 'enter']
       ],
+      //特殊符号
+      symbol: [
+        ['[', ']', '{', '}', '#', '%', '^', '*', '+', '='],
+        ['_', '\\', '|', '~', '<', '>', '$', '&', '@', '"'],
+        ['123', '.', ',', '?', '!', "'", 'del'],
+        ['abc', 'blank', 'enter']
+      ],
+       //数字
       numMode: [
         ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
         ['-', '/', ':', ';', '(', ')', '$', '&', '@', '"'],
-        ['top', '.', ',', '?', '!', "'", 'del'],
-        ['123', 'blank', 'enter']
+        ['*+=', '.', ',', '?', '!', "'", 'del'],
+        ['abc', 'blank', 'enter']
       ],
+       //大写
       uppercase: [
         ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
         ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
@@ -87,17 +115,38 @@ export default {
   },
 
   methods: {
-    tabHandle({ value = '' }) {
+    tabHandle(event,{ value = '' }) {
       if (value.indexOf('tab-num') > -1) {
+        this.changeStatus = this.status //保存之前的大小写状态
         this.status = 2;
         this.keyList = this.numMode;
         //数字键盘数据
-      } else if (value.indexOf('key-delete') > -1) {
+      }
+      else if(value.indexOf('symbol') > -1){
+        this.status = 3
+        this.keyList = this.symbol
+      } 
+      else if(value.indexOf('piny') > -1){
+        switch(this.changeStatus){
+          case 0:
+            this.status = 0;
+            this.keyList = this.lowercase;
+            break
+          case 1:
+            this.status = 1;
+            this.keyList = this.uppercase;
+            break
+          default:
+            this.status = 0;
+            this.keyList = this.lowercase;
+        }
+       
+      }else if (value.indexOf('key-delete') > -1) {
         this.emitValue('delete');
       } else if (value.indexOf('tabBlank') > -1) {
         this.emitValue(' ');
       } else if (value.indexOf('tabEnter') > -1) {
-        console.log('submit');
+        this.closeModal(event)
         //this.emitValue('\n');
       } else if (value.indexOf('tab-top') > -1) {
         if (this.status === 0) {
@@ -110,13 +159,12 @@ export default {
       } else {
       }
     },
-
     clickKey(event) {
       if (event.type === 'click' && this.equip) return;
       let value = event.srcElement.innerText;
-      value && value !== '空格' && value !== '123' && value !== '确定'
+      value && value !== '空格' && value !== '123' && value !== '确定' && value!=="*+=" && value !== 'abc' 
         ? this.emitValue(value)
-        : this.tabHandle(event.srcElement.classList);
+        : this.tabHandle(event,event.srcElement.classList);
     },
 
     emitValue(key) {
@@ -136,7 +184,7 @@ export default {
 .keyboard {
   width: 100%;
   margin: 0 auto;
-  font-size: 18px;
+  font-size: 0.36rem;
   border-radius: 2px;
   padding-top: 0.5em;
   background-color: #e5e6e8;
@@ -150,20 +198,19 @@ export default {
   p {
     width: 95%;
     margin: 0 auto;
-    height: 45px;
+    height: 0.9rem;
     margin-bottom: 0.5em;
     display: flex;
-    display: -webkit-box;
     flex-direction: row;
     flex-wrap: nowrap;
     justify-content: center;
     i {
       display: block;
       margin: 0 1%;
-      height: 45px;
-      line-height: 45px;
+      height: 0.9rem;
+      line-height:0.9rem;
       font-style: normal;
-      font-size: 24px;
+      font-size: 0.48rem;
       border-radius: 3px;
       width: 44px;
       background-color: #fff;
@@ -177,40 +224,38 @@ export default {
       }
     }
     .tab-top {
-      width: 50px;
+      width: 1rem;
       margin: 0 1%;
       background: #cccdd0;
       color: #fff;
       font-size: 24px;
     }
     .key-delete {
-      width: 50px;
+      width: 1rem;
       margin: 0 1%;
       color: #827f7f;
       background: #d7d7d8;
     }
-    .tab-num {
-      font-size: 18px;
+    .tabNum {
+      font-size: 0.44rem;
+      flex:1;
       background: #dedede;
       color: #5a5959;
+      line-height: 0.9rem;
     }
-    .tab-point {
-      width: 20px;
-    }
-    .tab-blank {
-      width: 80px;
-      font-size: 12px;
-      padding: 0 15px;
+    .tabBlank {
+      flex:2;
+      font-size: 0.44rem;
+      padding: 0 0.3rem;
       color: #5a5959;
-      line-height: 60px;
+      line-height: 0.9rem;
     }
-    .tab-symbol {
-      width: 20px;
-      font-size: 18px;
-    }
-    .tab-enter {
-      font-size: 30px;
-      line-height: 54px;
+    .tabEnter {
+       flex:1;
+      font-size: 0.44rem;
+      line-height: 0.9rem;
+      background: rgb(20,111,223);
+      color: #fff
     }
     &:nth-child(2) {
       width: 88%;

@@ -23,13 +23,17 @@ body{
   background: #efefef;
 }
 .demo-class{
-  input{
-    border:1px solid #ccc;
-    outline: none;
-    height: 30px;
-    font-size: 16px;
-    letter-spacing: 2px;
-    padding: 0 5px;
-  }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  // input{
+  //   border:1px solid #ccc;
+  //   outline: none;
+  //   height: 30px;
+  //   font-size: 16px;
+  //   letter-spacing: 2px;
+  //   padding: 0 5px;
+  // }
 }
 </style>
